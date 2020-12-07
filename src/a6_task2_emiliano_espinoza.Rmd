@@ -1,5 +1,5 @@
 ---
-title: "a6_task2_emiliano_espinoza"
+title: "Associations of Survey Results"
 author: "Emiliano Espinoza"
 date: "12/6/2020"
 output: html_document
@@ -74,7 +74,7 @@ survey_ct_results <- chisq.test(survey_ct) # run chi-square test
 survey_ct_tidy <- tidy(survey_ct_results)
 ```
 
-There is a significant association between survey responses and the political party the respondents identify with, ($\chi$^2^(`r survey_ct_tidy$parameter`) = `r round(survey_ct_tidy$statistic, 2)`, df = `r survey_ct_tidy$parameter`, *p-value* = `r round(survey_ct_tidy$p.value, 3)`). Most conservatives responded that they **do not** identify as environmentalists (`r survey_cp[1, 2]`), and the majority of liberals replied that they **do** identify as environmentalists (`r survey_cp[2,4]`)
+There is a significant association between survey responses and the political party the respondents identify with, ($\chi$^2^(`r survey_ct_tidy$parameter`) = `r round(survey_ct_tidy$statistic, 2)`, df = `r survey_ct_tidy$parameter`, *p-value* = `r round(survey_ct_tidy$p.value, 3)`). Most conservatives responded that they **do not** identify as environmentalists (`r survey_cp[1, 2]`), and the majority of liberals replied that they **do** identify as environmentalists (`r survey_cp[2,4]`).
 
 **Reference**
 Andrews Forest LTER Site and C. Batavia. 2019. Influences on charitable giving for conservation: Online survey data of 1,331 respondents across the US, August 2017 ver 3. Environmental Data Initiative. https://doi.org/10.6073/pasta/926e6270e324a1322a900da14d38b96c
