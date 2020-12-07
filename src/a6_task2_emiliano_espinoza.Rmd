@@ -1,0 +1,84 @@
+---
+title: "a6_task2_emiliano_espinoza"
+author: "Emiliano Espinoza"
+date: "12/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(kableExtra)
+```
+
+Data from a survey conducted by Chelsea Batavia and Andrews Forest LTER Site explore "Influences on charitable giving for conservation." This analysis seeks to describe the association between respondents’ political affiliation (binned “conservative” or “liberal” by self-identification), and if they consider themselves an environmentalist. It aims to test whether or not answers differ significantly based upon political parties as well as whether or not they identify as environmentalist. The method in which it test for independence is with a chi-square test.
+
+```{r}
+conservation_survey <- read.csv(here("data",    "conservation_survey.csv")) %>% 
+  clean_names() # read in data, and then clean it up
+```
+
+```{r}
+survey <- conservation_survey %>% 
+  select(env_id, pol_or) # create simplified version to keep 2 variables
+```
+
+```{r}
+survey_binned <- survey %>% 
+  mutate(Party = case_when( 
+    pol_or %in% 1:3 ~ "Conservative", 
+    pol_or %in% 5:7 ~ "Liberal"),
+    Environmentalist = case_when(
+      env_id %in% 1 ~ "Yes",
+      env_id %in% 2 ~ "No",
+      env_id %in% 3 ~ "Unsure")
+      ) %>% 
+  na.omit()
+# create variables of "Party" & "Environmentalist", use case_when function to attach observations to response number
+```
+
+```{r}
+survey_counts <- survey_binned %>% 
+  tabyl(Party, Environmentalist)
+# summarize counts from survey_binned
+```
+
+```{r}
+survey_cp <- survey_counts %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting(digits = 2) %>% 
+  adorn_ns() # adds actual count as well to each cell
+# Creates a table with both counts and proportions
+```
+
+**Table 1.** Survey responses of "Yes", "No", and "Unsure" are displayed in correlation to party identified by respondent, "Conservative" & "Liberal". Contingency table conveys response counts (actual response numbers to the right) and proportions (percentages to the left) relative to total response counts within parties.  
+```{r, fig.align='center'}
+survey_cp %>% 
+  kable(col.names = c("Party", "No", "Unsure", "Yes")) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+# creates table of survey_cp
+```
+
+```{r}
+# Remove party as a variable so we can run chi-square test with only numerical counts
+survey_ct <- survey_counts %>%
+  column_to_rownames(var = "Party")
+```
+
+```{r}
+survey_ct_results <- chisq.test(survey_ct) # run chi-square test
+
+survey_ct_tidy <- tidy(survey_ct_results)
+```
+
+There is a significant association between survey responses and the political party the respondents identify with, ($\chi$^2^(`r survey_ct_tidy$parameter`) = `r round(survey_ct_tidy$statistic, 2)`, df = `r survey_ct_tidy$parameter`, *p-value* = `r round(survey_ct_tidy$p.value, 3)`). Most conservatives responded that they **do not** identify as environmentalists (`r survey_cp[1, 2]`), and the majority of liberals replied that they **do** identify as environmentalists (`r survey_cp[2,4]`)
+
+**Reference**
+Andrews Forest LTER Site and C. Batavia. 2019. Influences on charitable giving for conservation: Online survey data of 1,331 respondents across the US, August 2017 ver 3. Environmental Data Initiative. https://doi.org/10.6073/pasta/926e6270e324a1322a900da14d38b96c
+
+
+
+
