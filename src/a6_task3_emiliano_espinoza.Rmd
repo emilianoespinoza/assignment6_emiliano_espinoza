@@ -1,0 +1,113 @@
+---
+title: "Lizards Exploratory Report"
+author: "Emiliano Espinoza"
+date: "12/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(effsize)
+library(kableExtra)
+
+lizards <- read_csv(here("data", "lizards.csv")) # read in data
+```
+
+### 1. Overview
+
+In conjunction with net primary production studies, consumer and faunal studies were conducted by David Lightfoot in collaboration with Jornada Basin LTER at or near NPP sites using pitfall traps. Live traps were utilized with traps checked once a week at the minimum. Sampling-with-replacement is used with the lizards. Variables measured include species, sex, recapture status, snout-vent length, total length, weight, and whether tail is broken or whole. This report provides an exploratory overview of differences between female lizard sizes between two specific species, Cnemidophorus Uniparens (CNUN) and Cnemidophorus Tessalatus (CNTE).
+
+### 2. Data and Analyses
+
+Lizard measurements were collected and made available by David Lightfoot between 1989-2006 in the Chihuahuan Desert, located ~25 km northeast of Las Cruces, NM USA. The data contain 68 observations of species specific female lizards. This analysis will look into whether or not there is a significant difference in total length difference in mean total length between female lizards for the two species. Following exploratory data visualization, total body length distributions between female lizards of two species, Cnemidophorus Uniparens (CNUN) and Cnemidophorus Tessalatus (CNTE), are compared with summary statistics accompanying including ttest and effect size (Cohen's D).
+
+### 3. Exploratory Findings
+
+#### A. Visualize Species Specific Lengths
+
+```{r}
+lizards_sbst <- lizards %>% # create subset from 'lizards' that only contains observations for:
+  select(spp, sex, total_length) %>% 
+  filter(sex == "F", 
+         spp %in% c("CNUN", "CNTE")) %>% 
+  na.omit() # omit NA's
+```
+
+```{r, fig.align='center'}
+# create visualization comparing total lengths of female lizards for the two species
+ggplot(data = lizards_sbst, aes(x = spp, y = total_length, group_by(spp))) +
+  geom_jitter(aes(color = spp)) +
+  labs(y = "Total Length (mm)",
+       x = "Species",
+       title = "Compared Female Lizard Lengths(mm)") +
+  theme(legend.position = "none")  # Remove redundant legend
+ 
+```
+
+**Figure 1.** Figure depicts comparison between total body lengths (mm) on y-axis to female lizard species shown on the x-axis, *Cnemidophorus uniparens* (CNUN) to the right in blue and *Cnemidophorus tessalatus* (CNTE) on the left in red. 
+
+#### B. Species Specific Statistics
+
+```{r, summary statistics}
+# Get summary statistics
+summary <- lizards_sbst %>% 
+  group_by(spp) %>% # group by species
+  summarize(mean_length = round(mean(total_length),2), # mean length
+            sd_length = round(sd(total_length),2), # mean sd
+            sample_size = n()) # sample size population
+```
+
+**Table 1.** Summary statistics of female lizard species *Cnemidophorus tessalatus* (CNTE) and *Cnemidophorus uniparens* (CNUN). Statistics convey the mean, standard deviation and sample size.
+
+```{r, descriptive_stats}
+# create summary statistics table
+summary %>%
+  kable(col.names = c("Species", "Mean Length (mm)", "Standard Deviation (mm)", "Sample Size")) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
+```{r summary_statistics_pt2, include=FALSE}
+#Create female species stats to perform exploratory graphs and analyses
+cnun <- lizards_sbst %>% 
+  filter(spp == "CNUN") %>% 
+  pull(total_length) %>% 
+  na.omit()
+
+cnte <- lizards_sbst %>% 
+  filter(spp == "CNTE") %>% 
+  pull(total_length) %>% 
+  na.omit()
+
+# Plot histograms & qq-plots to check assumptions
+hist(cnun) # Normal Distribution
+qqnorm(cnun) # Linear
+
+hist(cnte) # Somewhat Normal Distribution
+qqnorm(cnte) # Linear
+
+#T-test
+spp_ttest <- t.test(cnun, cnte)
+
+#Cohen's d
+spp_effsize <- cohen.d(cnun, cnte)
+
+#Get difference in actual means
+diff_means <- abs(summary %>% 
+  filter(spp == "CNUN") %>% 
+  select(mean_length)) -
+  (summary %>% 
+  filter(spp == "CNTE") %>% 
+  select(mean_length))
+```
+
+### 4. Summary
+
+Based on mean length values in mm, observed CNUN female lizards (`r summary[1,2]`) are less than that of observed CNTE female lizards (`r summary[2,2]`). The difference in means between CNUN and CNTE is as follows, (`r abs(diff_means)`) in (mm). Cohen's D effect size is large (`r spp_effsize $estimate`), and a t-test gives a p-value of (`r spp_ttest$p.value`). The actual differences, effect size, and p-value convey a significant enough difference to reject the null hypothesis that lizard lengths between specified species are not significantly different and accept the alternative hypothesis.
+
+
+### Citations
+
+Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e 
+
