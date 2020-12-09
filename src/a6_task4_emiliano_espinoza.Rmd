@@ -1,0 +1,45 @@
+---
+title: "Mono Lake Visualization"
+author: "Emiliano Espinoza"
+date: "12/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F,  message = F, warning = F)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(ggthemes)
+library(scales)
+
+
+mono_lake <- read_csv(here("data",  "mono_lake_annual_levels.csv"), skip = 5) %>% # read in data
+  clean_names() # clean data
+```
+
+```{r}
+ggplot(data = mono_lake, aes(x = year, y = lake_level_feet_above_sea_level)) +  # plot mono lake data
+  geom_line(color = "black", size = 1) +
+  geom_area(fill = "darkcyan", alpha = .4) +
+  coord_cartesian(ylim = c(6340, 6430)) +  # change y limits to increase tics along y-axis
+  scale_x_continuous(breaks = pretty_breaks(n = 9)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 6)) +
+  labs(x = "Year",
+       y = "Feet Above Sea Level",
+       title = "Change in Mono Lake levels (ft) (1850-2017)") +
+  theme_gray() +
+  annotate(geom = "point", x = 1941, y = 6417.00, shape = 16, size = 3, color = "red") + #annotate function to convey important historical moments that affect lake levels
+  geom_label(label = "1941: LA DWP began diverting water from Mono Lake", x = 1941, y = 6412, color = "black", size = 2.5) +
+  annotate(geom = "point", x = 1979, y = 6373.40, shape = 16, size = 3, color = "red") +
+  geom_label(label = "1979: Mono Lake Committee sues DWP", x = 1979, y = 6368, color = "black", size = 2.5) +
+  geom_hline(aes(yintercept = 6377), color = "black") + # add important visual thresholds 
+  geom_label(label = "6377 ft: Land bridges emerge", x = 1870, y = 6372, color = "black", size = 2.5) +
+  geom_hline(aes(yintercept = 6360), color = "black") +
+  geom_label(label = "6360 ft: Bird food availability adversly affected", x = 1890, y = 6355, color = "black", size = 2.5)
+
+
+```
+
+**Figure 1.**  Recorded change in Mono Lake levels from 1850 - 2017. Annotated descriptors describe major events and legal decisions that have impacted lake levels throughout history. Threshold lines convey critical lake levels: (1) At 6,377 feet above sea level, land bridges emerge between the mainland and islands, allowing predators (e.g. coyotes) to access major bird nesting sites. (2) At 6,360 feet above sea level aquatic birds, Eared grebes and California gulls, using mono lake as a source of food would be adversely affected due to a decrease in availability of brine shrimp for food at a salinity of 120 g/L.
